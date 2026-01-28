@@ -6,7 +6,7 @@ namespace RedGame.Framework.EditorTools
 {
     public partial class LocalizeGptWindow
     {
-        private class TranslateRec
+        public class TranslateRec
         {
             public bool selected;
             public string key;

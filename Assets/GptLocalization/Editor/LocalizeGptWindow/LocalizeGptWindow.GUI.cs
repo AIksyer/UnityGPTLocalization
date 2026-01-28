@@ -161,7 +161,10 @@ namespace RedGame.Framework.EditorTools
                     _baseUrl = DEFAULT_BASE_URL;
                 
                 _apiKey = EditorGUILayout.PasswordField("API Key", _apiKey);
-                if (!IsValidOpenAIKey(_apiKey))
+                bool isValidKey = IsValidOpenAIKey(_apiKey);
+                bool isDeepSeek = _baseUrl.Contains("deepseek.com");
+                
+                if (!isValidKey && !string.IsNullOrEmpty(_apiKey))
                 {
                     GUIStyle style = new GUIStyle(EditorStyles.helpBox)
                     {
@@ -170,7 +173,10 @@ namespace RedGame.Framework.EditorTools
                     EditorGUILayout.BeginHorizontal();
                     EditorGUI.indentLevel--;
                     GUILayout.Space(EditorGUIUtility.labelWidth);
-                    EditorGUILayout.LabelField("<color=#ff4444>Please enter a valid OpenAI API Key.</color>", style);
+                    string hint = isDeepSeek ? 
+                        "<color=#ff4444>Invalid DeepSeek API Key format. Key should start with 'sk-' and be at least 16 characters.</color>" :
+                        "<color=#ff4444>Please enter a valid OpenAI API Key. Key should start with 'sk-' and be at least 16 characters.</color>";
+                    EditorGUILayout.LabelField(hint, style);
                     EditorGUI.indentLevel++;
                     EditorGUILayout.EndHorizontal();
                 }
@@ -259,10 +265,16 @@ namespace RedGame.Framework.EditorTools
         private void OnEntryListGUI()
         {
             EditorGUILayout.LabelField("Entries to be localized", EditorStyles.boldLabel);
-            if (GUILayout.Button("Open Table Editor"))
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Open Table Editor (with Translate)"))
+            {
+                LocalizationTableEditorWithTranslate.ShowWindow(_curCollection);
+            }
+            if (GUILayout.Button("Open Unity Localization Tables", GUILayout.Width(180)))
             {
                 LocalizationTablesWindow.ShowWindow(_curCollection);
             }
+            EditorGUILayout.EndHorizontal();
             if (_recs == null)
                 RefreshRecords();
 
@@ -307,7 +319,10 @@ namespace RedGame.Framework.EditorTools
 
         private bool IsValidOpenAIKey(string key)
         {
-            var apiKeyPattern = @"^sk-\w{32,}$";
+            if (string.IsNullOrEmpty(key))
+                return false;
+            
+            var apiKeyPattern = @"^sk-[a-zA-Z0-9-_]{16,}$";
             return System.Text.RegularExpressions.Regex.IsMatch(key, apiKeyPattern);
         }
     }
